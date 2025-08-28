@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizHub - Home</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* General Body Styles */
+body {
+  background: #00121a;
+  color: #c0f0ff;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar */
+nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #011a27;
+  padding: 1rem 2rem;
+  box-shadow: 0 0 15px #0ff;
+}
+nav a {
+  color: #0ff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.3s;
+}
+nav a:hover { color: #00f; text-shadow: 0 0 10px #0ff; }
+#nav-username {
+  margin-left: auto;
+  font-weight: bold;
+  color: #0ff;
+  text-shadow: 0 0 5px #0ff;
+}
+
+/* Hero Section */
+.hero {
+  text-align: center;
+  padding: 5rem 2rem;
+  background: linear-gradient(135deg, #011a27 0%, #01334d 100%);
+  box-shadow: inset 0 0 50px #0ff;
+}
+.hero h1 {
+  font-size: 3rem;
+  color: #0ff;
+  text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+  margin-bottom: 1rem;
+}
+.hero p {
+  font-size: 1.2rem;
+  color: #c0f0ff;
+  margin-bottom: 2rem;
+}
+.hero button {
+  font-size: 1.2rem;
+  padding: 1rem 2rem;
+  margin: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #0ff;
+  background: #011a27;
+  color: #0ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.hero button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #0ff, 0 0 30px #00f inset;
+}
+
+/* Features Section */
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 3rem 2rem;
+}
+.feature-card {
+  background: #011a27;
+  color: #0ff;
+  width: 300px;
+  margin: 1rem;
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 0 15px #0ff;
+  transition: all 0.3s ease-in-out;
+}
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 0 30px #0ff, 0 0 50px #00f inset;
+}
+.feature-card h3 {
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px #0ff;
+}
+.feature-card p {
+  font-size: 1rem;
+  color: #c0f0ff;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 1rem;
+  color: #0ff;
+  box-shadow: 0 0 15px #0ff;
+  margin-top: 2rem;
+}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+  <a href="index.html">Home</a>
+  <a href="myquiz.html">My Quizzes</a>
+  <a href="global.html">Global Quizzes</a>
+  <a href="profile.html">Profile</a>
+  <a href="community.html">Community</a>
+  <span id="nav-username"></span>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+  <h1>Welcome to QuizHub</h1>
+  <p id="welcome-msg">Create, share, and try quizzes with friends worldwide!</p>
+  <button onclick="checkUsername()">Create Your Quiz</button>
+  <button onclick="location.href='global.html'">Play Quizzes</button>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+  <div class="feature-card">
+    <h3>Create Quizzes</h3>
+    <p>Add multiple questions, save them, and share with the world.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Global Quizzes</h3>
+    <p>Try quizzes made by other users and test your knowledge.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Community</h3>
+    <p>Join discussions, comment on quizzes, and connect with other players.</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-container">
+    <p>© 2025 QuizHub | All rights reserved | Created by Harazema</p>
+    <div class="social-links">
+      <a href="#" title="Discord">Discord</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Check if username exists
+const username = localStorage.getItem('quizhub_username');
+if(username){
+  document.getElementById('nav-username').innerText = username;
+  document.getElementById('welcome-msg').innerText = `Hello, ${username}! Ready to create or play quizzes?`;
+}
+
+// Prevent creating a quiz without username
+function checkUsername() {
+    const username = localStorage.getItem('quizhub_username');
+    if(!username){
+        alert("You need to set a username in your profile first!");
+        window.location.href = 'profile.html';
+    } else {
+        window.location.href = 'myquiz.html';
+    }
+}
+</script>
+
+</body>
+</html>

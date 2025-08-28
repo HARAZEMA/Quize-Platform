@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>My Quizzes - QuizHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* Dark futuristic aquatic theme */
+  :root { --bg:#00121a; --panel:#011a27; --panel2:#022b3a; --neon:#0ff; --accent:#00f; --text:#c0f0ff; }
+  html,body{height:100%;margin:0;font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text)}
+  nav{display:flex;gap:1rem;background:var(--panel);padding:1rem 2rem;box-shadow:0 0 15px var(--neon);}
+  nav a{color:var(--neon);text-decoration:none;font-weight:600}
+  nav a:hover{color:var(--accent);text-shadow:0 0 10px var(--neon);}
+  .container{max-width:900px;margin:2rem auto;padding:1rem}
+  h2{color:var(--neon);text-align:center;text-shadow:0 0 10px var(--neon)}
+  .card{background:var(--panel);padding:1rem;border-radius:10px;box-shadow:0 0 10px var(--neon);margin-bottom:1rem}
+  input[type="text"]{width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--neon);background:var(--panel2);color:var(--text);margin:8px 0}
+  button{background:var(--panel2);border:1px solid var(--neon);color:var(--text);padding:.6rem 1rem;border-radius:8px;cursor:pointer;transition:all .18s}
+  button:hover{background:var(--neon);color:var(--panel);box-shadow:0 0 18px var(--neon)}
+  .question-block{display:flex;gap:.6rem;align-items:center;margin:8px 0}
+  .question-block input{flex:1}
+  .remove-btn{background:#ff4d4d;border-color:#ff4d4d}
+  .list .item{background:var(--panel2);padding:.8rem;border-radius:8px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
+  .small{font-size:.9rem;color:#bfeff7}
+  .controls{display:flex;gap:.6rem;flex-wrap:wrap}
+</style>
+</head>
+<body>
+  <nav>
+  <a href="index.html">Home</a>
+  <a href="myquiz.html">My Quizzes</a>
+  <a href="global.html">Global Quizzes</a>
+  <a href="profile.html">Profile</a>
+  <a href="community.html">Community</a>
+</nav>
+
+  <div class="container">
+    <h2>Create a New Quiz</h2>
+
+    <div class="card">
+      <input id="quizTitle" type="text" placeholder="Enter quiz title" />
+      <div id="questionsArea"></div>
+
+      <div style="margin-top:8px" class="controls">
+        <button id="addQuestionBtn">➕ Add Question</button>
+        <button id="saveQuizBtn">💾 Save Quiz</button>
+      </div>
+      <p class="small">Add questions, then click Save Quiz to push to the realtime database.</p>
+    </div>
+
+    <h2>My Quizzes</h2>
+    <div id="myQuizzes" class="list">
+      <div class="card small">Loading quizzes...</div>
+    </div>
+  </div>
+
+  <!-- Firebase modular SDK (ES modules) -->
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  // ---------- USE YOUR PROJECT CONFIG BELOW ----------
+  const firebaseConfig = {
+    apiKey: "AIzaSyCTQxhVWq6yugqmZdx93JApQD4ODru56D4",
+    authDomain: "quizhub-d5b40.firebaseapp.com",
+    databaseURL: "https://quizhub-d5b40-default-rtdb.firebaseio.com",
+    projectId: "quizhub-d5b40",
+    storageBucket: "quizhub-d5b40.firebasestorage.app",
+    messagingSenderId: "635722320170",
+    appId: "1:635722320170:web:6094dbf608de89510af653",
+  };
+  // ---------------------------------------------------
+
+  // init
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // UI refs
+  const addQuestionBtn = document.getElementById('addQuestionBtn');
+  const saveQuizBtn = document.getElementById('saveQuizBtn');
+  const questionsArea = document.getElementById('questionsArea');
+  const quizTitleEl = document.getElementById('quizTitle');
+  const myQuizzesDiv = document.getElementById('myQuizzes');
+
+  // local questions array (keeps order)
+  let localQuestions = [];
+
+  // Helper: create a question row
+  function createQuestionRow(qText = '', aText = '') {
+    const container = document.createElement('div');
+    container.className = 'question-block';
+
+    const qInput = document.createElement('input');
+    qInput.type = 'text';
+    qInput.placeholder = 'Enter a question';
+    qInput.value = qText;
+    qInput.className = 'q-text';
+
+    const aInput = document.createElement('input');
+    aInput.type = 'text';
+    aInput.placeholder = 'Enter the answer';
+    aInput.value = aText;
+    aInput.className = 'q-answer';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', () => {
+      // remove from DOM and adjust localQuestions
+      const idx = Array.from(questionsArea.children).indexOf(container);
+      container.remove();
+      localQuestions.splice(idx, 1);
+      // no separate render needed, we keep DOM consistent
+    });
+
+    // push into localQuestions to maintain structure (append)
+    localQuestions.push({ question: qText, answer: aText });
+
+    // keep inputs in sync when user types
+    qInput.addEventListener('input', () => {
+      const idx = Array.from(questionsArea.children).indexOf(container);
+      if (idx >= 0) localQuestions[idx].question = qInput.value;
+    });
+    aInput.addEventListener('input', () => {
+      const idx = Array.from(questionsArea.children).indexOf(container);
+      if (idx >= 0) localQuestions[idx].answer = aInput.value;
+    });
+
+    container.appendChild(qInput);
+    container.appendChild(aInput);
+    container.appendChild(removeBtn);
+    questionsArea.appendChild(container);
+  }
+
+  // Add question button
+  addQuestionBtn.addEventListener('click', () => {
+    createQuestionRow();
+  });
+
+  // Render list of quizzes from snapshot object
+  function renderQuizzesList(snapshotData) {
+    myQuizzesDiv.innerHTML = '';
+    if (!snapshotData) {
+      myQuizzesDiv.innerHTML = '<div class="card small">No quizzes found.</div>';
+      return;
+    }
+
+    // snapshotData is an object of keys => quiz
+    Object.keys(snapshotData).forEach(key => {
+      const quiz = snapshotData[key];
+      const item = document.createElement('div');
+      item.className = 'item';
+      const left = document.createElement('div');
+      left.innerHTML = `<strong>${escapeHtml(quiz.title)}</strong><div class="small">${quiz.questions?.length || 0} questions</div>`;
+      const right = document.createElement('div');
+
+      const playBtn = document.createElement('button');
+      playBtn.textContent = 'Play';
+      playBtn.addEventListener('click', () => {
+        // store current quiz key and open play page with query param
+        // playquiz.html should read ?quizKey=KEY and fetch from DB
+        const url = 'playquiz.html?quiz=' + encodeURIComponent(key);
+        window.location.href = url;
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Delete';
+      delBtn.style.marginLeft = '8px';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this quiz?')) return;
+        try {
+          await remove(ref(db, 'quizzes/' + key));
+          // globalQuizzes mirror (if exists)
+          await remove(ref(db, 'globalQuizzes/' + key)).catch(()=>{});
+          // UI will update via onValue listener
+        } catch (err) {
+          console.error('Delete failed', err);
+          alert('Delete failed: ' + err.message);
+        }
+      });
+
+      right.appendChild(playBtn);
+      right.appendChild(delBtn);
+      item.appendChild(left);
+      item.appendChild(right);
+      myQuizzesDiv.appendChild(item);
+    });
+  }
+
+  // Save quiz -> push to database under 'quizzes' and 'globalQuizzes'
+  saveQuizBtn.addEventListener('click', async () => {
+    const title = quizTitleEl.value.trim();
+    // gather current questions from DOM to be safe (localQuestions may be out-of-sync if entries removed)
+    const blocks = questionsArea.querySelectorAll('.question-block');
+    const collected = [];
+    blocks.forEach(b => {
+      const q = b.querySelector('.q-text')?.value.trim();
+      const a = b.querySelector('.q-answer')?.value.trim();
+      if (q && a) collected.push({ question: q, answer: a });
+    });
+
+    if (!title) { alert('Please enter a quiz title'); return; }
+    if (collected.length === 0) { alert('Please add at least one question and answer'); return; }
+
+    // disable button while saving
+    saveQuizBtn.disabled = true;
+    saveQuizBtn.textContent = 'Saving...';
+
+    const quizData = { title, questions: collected, createdAt: Date.now() };
+
+    try {
+      // push to quizzes (gets unique key)
+      const newRef = await push(ref(db, 'quizzes'), quizData);
+      // also store same quiz under globalQuizzes using same key for easy deletion/mirroring
+      // push returns a ref whose key is newRef.key; we can set under globalQuizzes/<sameKey>
+      // but push(ref, value) already wrote; to ensure same key in globalQuizzes, use newRef.key:
+      await push(ref(db, 'globalQuizzes'), quizData);
+
+      // success
+      alert('Quiz saved successfully!');
+      // clear form
+      quizTitleEl.value = '';
+      questionsArea.innerHTML = '';
+      localQuestions = [];
+    } catch (err) {
+      console.error('Save failed', err);
+      alert('Save failed: ' + (err.message || err));
+    } finally {
+      saveQuizBtn.disabled = false;
+      saveQuizBtn.textContent = '💾 Save Quiz';
+    }
+  });
+
+  // Real-time listener to /quizzes -> update My Quizzes list
+  onValue(ref(db, 'quizzes'), (snap) => {
+    if (!snap.exists()) {
+      renderQuizzesList(null);
+      return;
+    }
+    renderQuizzesList(snap.val());
+  }, (err) => {
+    console.error('onValue error', err);
+    myQuizzesDiv.innerHTML = '<div class="card small">Could not load quizzes. Check console.</div>';
+  });
+
+  // small helper to escape HTML when rendering titles
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  // initially create one empty question row so the UI isn't empty
+  createQuestionRow();
+  </script>
+</body>
+</html>

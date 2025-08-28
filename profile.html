@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile - QuizHub</title>
+<style>
+body {
+  background: #00121a;
+  color: #c0f0ff;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+nav {
+  display: flex;
+  gap: 1rem;
+  background: #011a27;
+  padding: 1rem 2rem;
+  box-shadow: 0 0 15px #0ff;
+}
+nav a {
+  color: #0ff;
+  text-decoration: none;
+  font-weight: bold;
+}
+nav a:hover {
+  color: #00f;
+  text-shadow: 0 0 10px #0ff;
+}
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+.profile-header { text-align: center; margin-bottom: 2rem; }
+#profile-username-display {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 1rem 0;
+  color: #0ff;
+  text-shadow: 0 0 10px #0ff;
+}
+input[type="text"] {
+  padding: 0.5rem;
+  width: 200px;
+  border-radius: 5px;
+  border: 1px solid #0ff;
+  background: #022b3a;
+  color: #c0f0ff;
+}
+button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #0ff;
+  background: #011a27;
+  color: #0ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #0ff, 0 0 30px #00f inset;
+}
+.section h3 {
+  color: #0ff;
+  text-shadow: 0 0 10px #0ff;
+  margin-bottom: 1rem;
+}
+.card {
+  background: #011a27;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #0ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px #0ff, 0 0 40px #00f inset;
+}
+.card p { margin: 0.3rem 0; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="myquiz.html">My Quizzes</a>
+  <a href="global.html">Global Quizzes</a>
+  <a href="profile.html">Profile</a>
+  <a href="community.html">Community</a>
+</nav>
+
+<div class="container">
+  <div class="profile-header">
+    <input type="text" id="usernameInput" placeholder="Enter your username">
+    <button id="saveUsernameBtn">Save Username</button>
+    <h2 id="profile-username-display">Welcome!</h2>
+  </div>
+
+  <div class="section">
+    <h3>Your Uploaded Quizzes</h3>
+    <div id="userQuizzes">Loading quizzes...</div>
+  </div>
+</div>
+
+<footer style="text-align:center; padding:1rem; color:#0ff; box-shadow:0 0 15px #0ff; margin-top:2rem;">
+  <p>© 2025 QuizHub | All rights reserved</p>
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCTQxhVWq6yugqmZdx93JApQD4ODru56D4",
+  authDomain: "quizhub-d5b40.firebaseapp.com",
+  databaseURL: "https://quizhub-d5b40-default-rtdb.firebaseio.com",
+  projectId: "quizhub-d5b40",
+  storageBucket: "quizhub-d5b40.firebasestorage.app",
+  messagingSenderId: "635722320170",
+  appId: "1:635722320170:web:6094dbf608de89510af653"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Elements
+const usernameInput = document.getElementById('usernameInput');
+const saveUsernameBtn = document.getElementById('saveUsernameBtn');
+const usernameDisplay = document.getElementById('profile-username-display');
+const userQuizzesContainer = document.getElementById('userQuizzes');
+
+// Load username from localStorage
+let username = localStorage.getItem('quizhub_username') || '';
+if(username) {
+  usernameInput.value = username;
+  usernameDisplay.innerText = `Welcome, ${username}!`;
+}
+
+// Save username button
+saveUsernameBtn.onclick = () => {
+  const val = usernameInput.value.trim();
+  if(!val) return alert("Enter a username");
+  username = val;
+  localStorage.setItem('quizhub_username', username);
+  usernameDisplay.innerText = `Welcome, ${username}!`;
+  loadUserQuizzes();
+}
+
+// Load user quizzes from global quizzes
+function loadUserQuizzes() {
+  if(!username) return;
+
+  const quizzesRef = ref(db, 'quizzes');
+  onValue(quizzesRef, snapshot => {
+    const data = snapshot.val();
+    userQuizzesContainer.innerHTML = '';
+
+    if(!data) {
+      userQuizzesContainer.innerHTML = "<p>You haven't created any quizzes yet.</p>";
+      return;
+    }
+
+    let hasQuizzes = false;
+    Object.keys(data).forEach(key => {
+      const quiz = data[key];
+      if(quiz.createdBy === username){
+        hasQuizzes = true;
+        const div = document.createElement('div');
+        div.classList.add('card');
+        div.innerHTML = `<h4>${quiz.title}</h4>`;
+        quiz.questions.forEach((q,i) => {
+          div.innerHTML += `<p>Q${i+1}: ${q.question}</p>`;
+        });
+        div.onclick = () => {
+          localStorage.setItem('currentQuiz', JSON.stringify(quiz));
+          window.location.href = `playquiz.html?quiz=${key}`;
+        }
+        userQuizzesContainer.appendChild(div);
+      }
+    });
+
+    if(!hasQuizzes){
+      userQuizzesContainer.innerHTML = "<p>You haven't created any quizzes yet.</p>";
+    }
+  });
+}
+
+// Initial load
+if(username) loadUserQuizzes();
+</script>
+</body>
+</html>
