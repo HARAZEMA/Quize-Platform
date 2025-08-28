@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile - QuizHub</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* Profile Page Styles */
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 2rem;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+#profile-username {
+  font-size: 2rem;
+  color: #0ff;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px #0ff;
+}
+
+.section {
+  margin-top: 2rem;
+}
+
+.section h3 {
+  color: #0ff;
+  text-shadow: 0 0 10px #0ff;
+  margin-bottom: 1rem;
+}
+
+.card {
+  background: #011a27;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #0ff;
+  transition: all 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px #0ff, 0 0 40px #00f inset;
+}
+
+.card p {
+  margin-bottom: 0.5rem;
+}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html">Home</a>
+  <a href="myquiz.html">My Quizzes</a>
+  <a href="global.html">Global Quizzes</a>
+  <a href="profile.html">Profile</a>
+  <a href="community.html">Community</a>
+</nav>
+
+<div class="container">
+  <div class="profile-header">
+    <input type="text" id="username" placeholder="Enter your username">
+    <button onclick="saveProfile()">Save Username</button>
+    <h2 id="profile-username-display"></h2>
+  </div>
+
+  <div class="section">
+    <h3>Your Uploaded Quizzes</h3>
+    <div id="userQuizzes"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-container">
+    <p>© 2025 QuizHub | All rights reserved</p>
+    <div class="social-links">
+      <a href="#" title="Discord">Discord</a>
+      <a href="#" title="Twitter">Twitter</a>
+      <a href="#" title="Instagram">Instagram</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Load profile info
+let profile = JSON.parse(localStorage.getItem('profile')) || {};
+let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes')) || [];
+
+// Load profile and quizzes
+function loadProfile() {
+  if(profile.username){
+    document.getElementById('username').value = profile.username;
+    document.getElementById('profile-username-display').innerText = profile.username;
+  }
+  displayQuizzes();
+}
+
+// Save username
+function saveProfile() {
+  const username = document.getElementById('username').value.trim();
+  if(!username) return alert("Please enter a username!");
+  profile.username = username;
+  localStorage.setItem('profile', JSON.stringify(profile));
+  document.getElementById('profile-username-display').innerText = username;
+  alert("Username saved!");
+}
+
+// Display user's uploaded quizzes
+function displayQuizzes() {
+  const container = document.getElementById('userQuizzes');
+  container.innerHTML = '';
+
+  if(myQuizzes.length === 0){
+    container.innerHTML = "<p>You haven't created any quizzes yet.</p>";
+    return;
+  }
+
+  myQuizzes.forEach((quiz, index) => {
+    const div = document.createElement('div');
+    div.classList.add('card');
+    div.innerHTML = `<h4>${quiz.title}</h4>`;
+    quiz.questions.forEach((q,i) => {
+      div.innerHTML += `<p>Q${i+1}: ${q.question} | Answer: ${q.answer}</p>`;
+    });
+    container.appendChild(div);
+  });
+}
+
+// Initialize
+loadProfile();
+</script>
+</body>
+</html>

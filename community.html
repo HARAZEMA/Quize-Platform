@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Community - QuizHub</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* Community Page Specific Styles */
+.container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #0ff;
+  text-shadow: 0 0 10px #0ff;
+}
+
+#commentForm {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2rem;
+}
+
+#commentForm textarea {
+  resize: none;
+  height: 100px;
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #0ff;
+  background: #022b3a;
+  color: #c0f0ff;
+}
+
+#commentForm button {
+  align-self: flex-start;
+}
+
+.comment-card {
+  background: #011a27;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #0ff;
+  transition: all 0.3s ease-in-out;
+}
+
+.comment-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px #0ff, 0 0 40px #00f inset;
+}
+
+.comment-card p {
+  margin-bottom: 0.5rem;
+}
+</style>
+</head>
+<body>
+<!-- Navbar -->
+<nav>
+  <a href="index.html">Home</a>
+  <a href="myquiz.html">My Quizzes</a>
+  <a href="global.html">Global Quizzes</a>
+  <a href="profile.html">Profile</a>
+  <a href="community.html">Community</a>
+</nav>
+
+<div class="container">
+  <h2>Community Feedback</h2>
+
+  <form id="commentForm">
+    <textarea id="commentText" placeholder="Leave your feedback..."></textarea>
+    <button type="button" onclick="addComment()">Submit Feedback</button>
+  </form>
+
+  <div id="commentsContainer"></div>
+</div>
+
+<footer>
+  <div class="footer-container">
+    <p>© 2025 QuizHub | All rights reserved</p>
+    <div class="social-links">
+      <a href="#" title="Discord">Discord</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Load comments from localStorage
+let comments = JSON.parse(localStorage.getItem('communityComments')) || [];
+
+// Display comments
+function displayComments() {
+  const container = document.getElementById('commentsContainer');
+  container.innerHTML = '';
+
+  if(comments.length === 0){
+    container.innerHTML = "<p>No feedback yet. Be the first to comment!</p>";
+    return;
+  }
+
+  comments.forEach((comment, index) => {
+    const div = document.createElement('div');
+    div.classList.add('comment-card');
+    div.innerHTML = `
+      <p>${comment}</p>
+      <button onclick="deleteComment(${index})" style="margin-top:5px;">Delete</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Add new comment
+function addComment() {
+  const text = document.getElementById('commentText').value.trim();
+  if (!text) return alert("Please write a comment first!");
+
+  comments.push(text);
+  localStorage.setItem('communityComments', JSON.stringify(comments));
+  displayComments();
+  document.getElementById('commentText').value = '';
+}
+
+// Delete comment
+function deleteComment(index) {
+  if(!confirm("Are you sure you want to delete this comment?")) return;
+  comments.splice(index, 1);
+  localStorage.setItem('communityComments', JSON.stringify(comments));
+  displayComments();
+}
+
+// Initialize
+displayComments();
+</script>
+</body>
+</html>
