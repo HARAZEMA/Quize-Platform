@@ -5,6 +5,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Play Quiz - QuizHub</title>
 <link rel="stylesheet" href="style.css">
+<style>
+.card {
+  background: #011a27;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #0ff;
+}
+.card input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #0ff;
+  background: #022b3a;
+  color: #c0f0ff;
+}
+button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid #0ff;
+  background: #011a27;
+  color: #0ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #0ff, 0 0 30px #00f inset;
+}
+</style>
 </head>
 <body>
 <nav>
@@ -16,6 +47,15 @@
   <form id="quizForm"></form>
   <button onclick="submitQuiz()">Submit Answers</button>
 </div>
+
+<footer>
+ <div class="footer-container">
+   <p>© 2025 QuizHub | All rights reserved</p>
+   <div class="social-links">
+    <a href="#" title="Discord">Discord</a>
+  </div>
+ </div>
+</footer>
 
 <script>
 // Get selected quiz from localStorage
@@ -40,15 +80,6 @@ quiz.questions.forEach((q, index) => {
   `;
   form.appendChild(div);
 });
-
-  <footer>
-   <div class="footer-container">
-     <p>© 2025 QuizHub | All rights reserved</p>
-     <div class="social-links">
-      <a href="#" title="Discord">Discord</a>
-    </div>
-   </div>
- </footer>
 
 // Submit answers and calculate score
 function submitQuiz() {
